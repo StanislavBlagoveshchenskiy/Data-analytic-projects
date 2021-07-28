@@ -1,0 +1,26 @@
+## Получите таблицу, в которой будет номер недели; информация о количестве купленных за неделю билетов; номер недели ещё раз, если в эту неделю проходил фестиваль, и nan, если не проходил; а также название фестиваля festival_name.
+SELECT
+    EXTRACT(week FROM CAST(flights.arrival_time AS date)) AS week_number,
+    COUNT(ticket_flights.ticket_no) AS ticket_amount,
+    sub.festival_week AS festival_week,
+    sub.festival_name AS festival_name
+    
+FROM tickets
+    LEFT JOIN ticket_flights ON ticket_flights.ticket_no  = tickets.ticket_no
+    LEFT JOIN flights ON flights.flight_id  = ticket_flights.flight_id
+    LEFT JOIN airports ON airports.airport_code = flights.arrival_airport
+    LEFT JOIN
+        (SELECT
+             festival_name,
+             EXTRACT(WEEK FROM CAST(festival_date AS date)) AS festival_week
+         FROM
+             festivals
+         WHERE
+             festival_city = 'Москва' AND festival_date BETWEEN '2018-07-23' AND '2018-09-30') as sub ON sub.festival_week = EXTRACT(week FROM CAST(flights.arrival_time AS date))
+WHERE
+    airports.city = 'Москва' AND
+    CAST(flights.arrival_time AS date) BETWEEN '2018-07-23' AND '2018-09-30'
+GROUP BY
+    EXTRACT(week FROM CAST(flights.arrival_time AS date)), 
+    festival_week, 
+    festival_name
